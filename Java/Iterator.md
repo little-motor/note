@@ -1,6 +1,6 @@
 # Iterator迭代器总结
 ## 1. 简介：
-Collection合集框架接口继承自Iterable接口，Iterable接口中定义了iterator方法，该方法会返回一个迭代器。Iterator接口为便利各种类型的合集中的元素提供了统一的方法。源码如下
+Collection合集框架接口继承自Iterable接口，Iterable接口中定义了iterator方法，该方法返回一个iterator接口，Iterator接口为便利各种类型的合集中的元素提供了统一的方法。源码如下
 ```
 public interface Iterable<T> {
     
