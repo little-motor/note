@@ -1,7 +1,7 @@
 # 新建Spring MVC项目并使用Java代码配置容器
 ### ——使用WebApplicationInitializer实现
 ## 1.引言：
-在Servlet3.0+环境中，容器的配置支持多种方式，可以用纯Java代码方式配置（推荐），也可以用传统的XML文件配置，甚至可以将两个混合在一起配置，**这里我强烈推荐使用Java代码配置方式，因为相对更安全，简介明了，也更符合逻辑**。
+在Servlet3.0+环境中，容器的配置支持多种方式，可以用纯Java代码方式配置（推荐），也可以用传统的XML文件配置，甚至可以将两个混合在一起配置，**这里我强烈推荐使用Java代码配置方式，因为相对更安全，简洁明了，也更符合逻辑**。
 在写这篇文章之前，我就遇到了这个麻烦，在学习《Spring in Action》的过程中，照着他写的Java配置代码竟然不能运行，然后一模一样的示例代码完全ojbk，我在网上也找了很多教程，大部分还是比较老的XML配置的方式，我觉得代码被一堆<>淹没的感觉很不好。废话不多说，以一个官方文档的截图开始
 ![ServletConfig官方截图](https://img-blog.csdn.net/20180627102028138?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5Mzg1MTE4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 
