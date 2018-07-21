@@ -32,3 +32,21 @@ Spring将数据访问过程中固定的和可变的部分明确划分为两个�
  orm.jdo.JdoTemplate|Java数据对象实现
  orm.jpa.JpaTemplate|Java持久化API的实体管理器
  由于Spring所支持的大多数持久化功能都依赖于数据源，所以在声明模板和Repository之前，需要在Spring中配置一个数据源来连接数据库。
+
+## 4. 配置数据源
+无论选在Spring的哪种数据访问方式，都需要一个数据源引用。Spring提供了在Spring上下文中配置数据源bean的多种方式
+- 通过JDBC驱动程序定义的数据源
+- 通过JNDI查找的数据源
+- 连接池的数据源
+
+JNDI(Java Naming and Directory Interface)是J2EE重要的的规范之一，要求所有J2EE容器都要提供JNDI规范的实现。这些服务器允许你配置通过JNDI获取数据源。这种配置的好处在于数据源完全可以在应用程序之外进行管理，这样应用程序只需要在访问数据库的时候查找数据源就可以了。
+```
+@Bean
+public JndiObjectFactoryBean dataSource(){
+  JndiObjectFactoryBean jndiObjectFB = new JndiObjectFactoryBean();
+  jndiObjectFB.setJndiName("jdbc/H2");
+  jndiObjectFB.setResourceRef(true);
+  jndiObjectFB.setProxyInterface(javax.sql.DataSource.class);
+  return jndiObjectFB;
+}
+```
