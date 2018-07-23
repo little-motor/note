@@ -38,7 +38,7 @@ Spring将数据访问过程中固定的和可变的部分明确划分为两个�
 - 通过JDBC驱动程序定义的数据源
 - 通过JNDI查找的数据源
 - 连接池的数据源
-
+### 4.1 使用JNDI数据源
 JNDI(Java Naming and Directory Interface)是J2EE重要的的规范之一，要求所有J2EE容器都要提供JNDI规范的实现。这些服务器允许你配置通过JNDI获取数据源。这种配置的好处在于数据源完全可以在应用程序之外进行管理，这样应用程序只需要在访问数据库的时候查找数据源就可以了。
 ```
 @Bean
@@ -48,5 +48,35 @@ public JndiObjectFactoryBean dataSource(){
   jndiObjectFB.setResourceRef(true);
   jndiObjectFB.setProxyInterface(javax.sql.DataSource.class);
   return jndiObjectFB;
+}
+```
+### 4.2 使用数据源连接池
+### 4.3 基于JDBC驱动的数据源
+通过JDBC驱动定义数据源是最简单的配置方式，Spring提供了三个这样的数据源类(均位于org.springframework.jdbc.datasource包中)供选择。
+- DriverManagerDataSource:在每个连接请求时都会返回一个新建的连接。
+- SimpleDriverDataSource
+- SingleConnectionDataSource：在每个连接请求时都会返回同一个的连接。
+如下就是配置DriverManagerDataSource的方法：
+```
+@Bean
+public DataSource dataSource(){
+  DriverManagerDataSource ds = new DriverManagerDataSource();
+  ds.setDriverClassName("org.h2.Driver");
+  ds.setUrl("jdbc:h2:tcp://localhost/~/...");
+  ds.setUsername("...");
+  ds.setPassword("");
+  return ds;
+}
+```
+与具备池功能的数据源相比，唯一的区别在于这些数据源bean都没有提供连接池功能，所以没有可配置的池相关的属性。
+### 4.4 使用嵌入式的数据源
+嵌入式数据库(embedded database)作为应用的一部分运行，而不是应用连接的独立数据库服务器。在开发和测试环境中，嵌入式数据库是个很好的可选方案，如下是使用Java来配置嵌入式数据库。
+```
+@Bean
+public DataSource dataSource(){
+  return new EmbeddedDatabaseBuilder()
+             .setType(EmbeddedDatabaseType.H2)
+             .addScript("classpath:schema.sql")
+             .build();
 }
 ```
