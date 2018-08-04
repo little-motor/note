@@ -8,6 +8,7 @@ git config --global user.email "email@example.com"
 ### 1.2 查看配置信息
 ```
 git config -l
+git config --global core.quotepath false     //让git支持中文
 ```
 ### 1.3 初始化
 ```
