@@ -53,3 +53,71 @@ asyncSupported | Filter是否支持异步操作
     @WebInitParam(name = "B", value = "2")
   })
 ```
+## 4. 示例程序
+```
+package config.filter;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * 日志监听器，记录每天的访问情况
+ * @author littlemotor
+ * @since 18.8.22
+ */
+@WebFilter(filterName = "LoggingFilter",
+           urlPatterns = {"/*"},
+           initParams = {
+             @WebInitParam(name = "logFileName", value = "log.txt")
+           })
+public class LoggingFilter implements Filter{
+
+  private PrintWriter viewLogger;
+  private PrintWriter counterLogger;
+  
+  @Override
+  public void init(FilterConfig filterConfig) throws ServletException {
+    //String logFileName = filterConfig.getInitParameter("logFileName");
+    //String appPath = filterConfig.getServletContext().getRealPath("/");
+    //System.out.println(appPath);
+    try {
+      viewLogger = new PrintWriter(new File("/Users/littlemotor/webLog/","log.txt"));
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Filter链，注意在最后加doFilter
+   */
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
+    HttpServletRequest httpRequest = (HttpServletRequest)request;
+    viewLogger.println(new Date() + " " + "URI: " + httpRequest.getRequestURI() );
+    viewLogger.flush();  
+    chain.doFilter(request, response);
+  }
+
+  @Override
+  public void destroy() {
+    System.out.println("destroying filter");
+    if(viewLogger != null) {
+      viewLogger.close();
+    }
+  }
+}
+```
