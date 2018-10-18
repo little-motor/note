@@ -1,0 +1,15 @@
+[toc]
+## 1. 引言
+Java与C++之间有一堵由内存动态分配和垃圾收集技术所围成的“高墙”，Java虚拟机在执行Java程序的过程中会把他所管理的内存划分为若干个不同的数据区域
+
+![Java虚拟机运行时数据区](https://raw.githubusercontent.com/little-motor/uml/master/JVMRunTime.png)
+
+## 2. 程序计数器(Program Counter Register)
+程序计数器是一块较小的内存空间，作为当前线程执行的字节码的行号指示器，Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式实现的，每条线程都有一个独立的程序计数器。
+## 3. 栈
+### 3.1 Java虚拟机栈(VM Stack)
+Java虚拟机栈也是线程私有的，与线程的生命周期相同，虚拟机栈描述的是Java方法执行的内存模型：每个方法在执行时都会创建一个栈帧(Stack Frame)用于存储局部变量表、操作数栈、动态链接、方法出口等信息。
+#### 3.1.1 局部变量表
+局部变量表存放了编译期可知的各种基本数据类型(boolean,byte,char,short,int,float,long,double),对象引用(reference类型)和returnAddress类型。
+### 3.2 本地方法栈(Native Method Stack)
+与虚拟机栈所发挥的作用非常相似，本地方法栈执行Native方法。
