@@ -13,3 +13,9 @@ Java虚拟机栈也是线程私有的，与线程的生命周期相同，虚拟�
 局部变量表存放了编译期可知的各种基本数据类型(boolean,byte,char,short,int,float,long,double),对象引用(reference类型)和returnAddress类型。
 ### 3.2 本地方法栈(Native Method Stack)
 与虚拟机栈所发挥的作用非常相似，本地方法栈执行Native方法。
+## 4. 堆(Java Heap)
+Java堆是被所有线程共享的一块内存区域，此区域的唯一目的是存放对象实例和数组，也被称为GC堆。基本都采用分代收集算法，Java堆可以被细分为：Eden空间、FromSurvivor空间、To Survivor空间等。
+## 5. 方法区(Method Area)
+方法区与Java堆一样，是各个线程共享的内存区域，存储虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。
+### 5.1 运行时常量池(Runtime Constant Pool)
+
