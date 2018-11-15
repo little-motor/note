@@ -187,3 +187,14 @@ public int getContentLength()             //请求主体的字节数
 public String getContentType()            //返回主体的MIME类型
 public String getProtocol()               //返回HTTP请求的协议名称和版本
 ```
+### 2.3 ServletResponse
+表示一个Servlet响应，在调用Servlet的Service方法之前，Servlet容器首先创建一个ServletResponse，并将它作为第二个参数传给Service方法，ServletResponse隐藏了向浏览器发送响应的复杂过程。
+首先应该调用setContentType方法，设置响应内容类型为"text/html",调用getWriter方法返回一个可以向客户端发送文本的PrintWriter，还有getOutputStream方法，可以发送二进制数据。
+### 2.4 ServletConfig
+Servlet容器初始化Servlet时会向init方法传入一个ServletConfig实例封装了@WebServlet或者xml文件传递给Servlet的配置信息，初始参数为key-vealue形式存储在HashMap中。
+```
+String getInitParameter(String name)  //获取初始参数值
+Enumeration<String> getInitParameterNames()  //返回所有参数名称枚举类型
+```
+### 2.5 ServletContext
+负责定义一系列和容器通讯的方法，例如获取MIMI类型，调度器请求，写日志。每个虚拟机的每个web应用只有唯一的context，对于分布式web应用来说每个虚拟机都会有一个上下文，所以他们不能用来存储全局信息，可以用外部数据库代替，ServletContext对象包含于ServletConfig当中。
