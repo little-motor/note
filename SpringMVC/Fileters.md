@@ -1,9 +1,9 @@
 [toc]
-## 1. 引言
-Filter是拦截Request请求的对象，在用户的请求访问资源前处理ServletRequest以及ServletResponse，他可用于日志记录、加解密、Session检查、图像文件保护等。
-## 2. Filter API
-Filter相关接口包括Filter、FilterConfig、FilterChain。
-### 2.1 Filter接口
+# 1. 引言
+Filter是拦截Request请求的对象，在用户的请求访问资源前处理ServletRequest以及ServletResponse，他可用于日志记录、加解密、Session检查、图像文件保护等。Filter配置可以通过注解或者部署描述来完成，当需要多个Filter配合并强调顺序时只能通过部署描述符配置。
+# 2. Filter API
+Filter相关接口包括Filter、FilterConfig、FilterChain，Filter实现必须继承javax.servlet.Filter接口。
+## 2.1 Filter接口
 包含三个生命周期init、doFilter、destroy，servlet容器初始化Filter时，会触发Filter的init方法，FilterConfig实例由Servlet容器传入init方法中。
 ```
 void init(FilterConfig filterConfig)
@@ -14,14 +14,29 @@ void doFilter(ServletRequest request, Servlet Response, FilterChanin filterChain
 ```
 在Filter的doFilter的实现中，最后一行需要调用FilterChain中的doChain方法
 ```
-filterChain.doFilter(request, response)
+filterChain.doFilter(ServletRequest request, ServletResponse response)
 ```
-一个资源可能被多个Filter关联到（Filter链条），这时Filter.doFilter()方法将触发Filter链条中下一个Filter。**只有在Filter链条中的最后一个Filter里调用FilterChain.doFilter()才会触发处理资源方法，否则Request请求终止。**
-Filter接口最后一个方法是destroy，在servlet容器要销毁时触发
+一个资源可能被多个Filter关联到（Filter链条），这时Filter.doFilter()方法将触发Filter链条中下一个Filter。**只有在Filter链条中的最后一个Filter里调用FilterChain.doFilter()才会触发处理资源方法，否则Request请求终止。** FilterChain接口只定义了一个方法doFilter用于Filter链条
+```
+public interface FilterChain {
+	
+	/**
+	* Causes the next filter in the chain to be invoked, or if the calling filter is the last filter
+	* in the chain, causes the resource at the end of the chain to be invoked.
+	*
+	* @param request the request to pass along the chain.
+	* @param response the response to pass along the chain.
+	*/
+	
+    public void doFilter ( ServletRequest request, ServletResponse response ) throws IOException, ServletException;
+
+}
+```
+Filter接口最后一个方法是destroy，在servlet容器要销毁Filter时触发
 ```
 void destroy();
 ```
-## 3. Filter配置
+# 3. Filter配置
 Filter配置需要如下步骤：
 1. 确认哪些资源需要使用这个Filter拦截器
 2. 配置Filter的初始化参数值
@@ -53,7 +68,7 @@ asyncSupported | Filter是否支持异步操作
     @WebInitParam(name = "B", value = "2")
   })
 ```
-## 4. 示例程序
+# 4. 示例程序
 ```
 package config.filter;
 
