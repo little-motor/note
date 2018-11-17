@@ -208,3 +208,56 @@ Object getValue();
  public void valueBound(HttpSessionBindingEvent event);
  public void valueUnbound(HttpSessionBindingEvent event);
 ```
+# 5. ServletRequestListener
+ServletRequest范围的监听器接口有三个：ServletRequestListener,ServletRequestAttributeListener和AsyncListener
+## 5.1 ServletRequestListener
+会对ServletRequest的创建和销毁事件进行响应，容器会通过一个池来存放并重复利用多个ServletRequest，ServletRequest的创建是从容器池里被分配出来的时刻开始，而他的销毁时刻是放回容器池里的时间，他包含两个方法
+```
+void requestInitialized(ServletRequestEvent event);
+void requestDestroyed(ServletRequestEvent event);
+```
+ServletRequestEvent接口有两个方法
+```
+public class ServletRequestEvent extends java.util.EventObject { 
+
+    private final transient ServletRequest request;
+
+    /** Construct a ServletRequestEvent for the given ServletContext
+      * and ServletRequest.
+      *
+      * @param sc       the ServletContext of the web application.
+      * @param request  the ServletRequest that is sending the event.
+      */
+    public ServletRequestEvent(ServletContext sc, ServletRequest request) {
+        super(sc);
+        this.request = request;
+    }
+
+    /**
+      * 返回ServletRequest
+      */
+    public ServletRequest getServletRequest () { 
+        return this.request;
+    }
+
+    /**
+      * 返回上下文
+      */
+    public ServletContext getServletContext () { 
+        return (ServletContext) super.getSource();
+    }
+}
+```
+## 5.2 ServletRequestAttributeListener
+当ServletRequest范围的属性被添加、删除或替换时，ServletRequestAttributeListener接口会被调用，他提供了三个方法：
+```
+void attributeAdded(ServletRequestAttributeEvent event);
+void attributeRemoved(ServletRequestAttributeEvent event);
+void attributeReplaced(ServletRequestAttributeEvent event);
+```
+ServletRequestAttributeEvent类继承自ServletRequestEvent，新增了两个方法
+```
+String getName()  //返回属性名
+Object getValue()  //返回属性的值
+
+```
