@@ -82,9 +82,128 @@ update table_name          #更新特定数据
     set field1=value1,
         field2=value2,
         field3=value3,
-    where condition
+    where condition;
 ```
+## 3.4 select 
+查询操作,支持四则运算(+,-,*,/,%)
+```
+select field1, field2... from table_name;
+```
+### 2.4.1避免重复查询
+```
+select distinct field1, field2... from table_name;
+```
+### 2.4.2 as修改字段名
+```
+select field1 as name1, field2 as name2... from table_name;
+```
+### 2.4.3 条件查询
+条件查询语句包含如下功能:
+- 带关系运算符和逻辑运算符的条件查询
 
+比较运算符 | 描述
+---------|----------|---------
+> | 
+ < | 
+= | 
+!=(<>) | 
+>=|
+<=|
+
+逻辑运算符 | 描述
+---------|----------
+ and(&&)| 
+ or(ll)|
+ xor | 逻辑异或
+ not(!) | 逻辑非
+
+- 带between and关键字条件查询
+
+判定字段数值在指定范围的条件查询
+```
+select field1,field2...
+    from table_name
+        where fidle between value1 and value2;
+```
+- 带is null关键字条件查询
+- 带in关键字条件查询
+
+判断数值在指定集合的条件查询
+```
+select field1,field2...
+    from table_name
+        where field in(value1,value2...);
+```
+- 带like关键字条件查询
+
+like可以实现模糊查询,通过字符串和通配符组合的方式查询字段,字符串必须加上单引号或双引号,"_"匹配单个字符,"%"匹配任意长度字符
+```
+select field1, fidld2...
+    frome table_name
+        where field [not] like value; 
+```
+### 2.4.4 排序
+可以按照单字段或者多字段排序,多字段排序的过程为首先按照第一个字段进行排序,如果遇到值相同的字段则会按照第二个字段进行排序
+```
+select field1, fidld2...
+    from table_name
+        where condition
+            order by field1 [asc|desc][,field2[asc|desc]];
+```
+### 2.4.5 限制查询数量
+```
+select field1, field2...
+    from table_name
+        where condition
+            limit offset_start,row_count;    #offset_start代表初始值,row_count代表行数
+```
+limit经常与order by配合使用,即先对查询结果进行排序,然后显示其中部分数据
+```
+select field1, field2...
+    from table_name
+        where condition
+            order by field limit offset_start,row_count;
+```
+### 2.4.6 统计函数
+- count():统计表中记录的条数
+- avg():统计字段的平均值
+- sum():统计字段的总和
+- max():查询字段值的最大值
+- min():查询字段值的最小值
+```
+select function(field)
+    from table_name
+        where condition;
+```
+### 2.4.7 分组查询
+分组所依据的字段值一定要具有重复性,否则没有任何意义,建议与统计函数一起使用
+```
+select function()
+    from table_name
+        where condition
+            group by field;  #根据field中的字段分组,并显示每组中的一条数据
+```
+function可以使用
+```
+group_concat(field)  #合并同组的所有字段并用,分隔后显示
+count(field)  #显示字段数量
+```
+多个字段分组查询的过程是首先按照字段field1进行分组,然后针对每组按照字段field2进行分组
+```
+select group_concat(field),function(field)
+    from table_name
+        where condition
+            group by field1,field2...;
+```
+HAVING字句限定分组查询
+因为where主要是用来实现条件限制数据记录,在条件限制分组记录中要使用having
+```
+select function(field)
+    from table_name
+        where condition
+        group by field1,field2...
+        having condition;
+```
 
 # 4. 触发器
 数据库对象触发器(trigger)是用来实现由一些表事件触发的某个操作,他所响应的事件有：
