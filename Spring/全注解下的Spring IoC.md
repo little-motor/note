@@ -52,10 +52,10 @@ public interface BeanFactory {
 默认情况下Spring IoC容器的Bean都是以单例存在的，也就是用getBean()方法返回的都是同一个对象，与isSingleton()方法相反的是isPrototype()方法，用来判断是否为原型模式，如果返回的是true，那么使用getBean()方法返回Bean的时候，Spring IoC容器就会创建一个新的Bean返回给一个调用者。
 为了进一步完善IoC容器的功能，在BeanFactory的基础上，还设计了一个更为高级的子接口ApplicationContext。
 #2. 装配Bean
-## 1. 通过@Configuration方式
+## 2.1 通过@Configuration方式
 @Configuration代表这是一个Java配置文件，Spring容器会根据他来生成IoC容器去装配Bean
 @Bean(String name)会将被其注解的方法返回的实例装配到IoC容器中,name属性定义这个Bean的名称，默认与标准方法名相同。
-## 2. 通过@Component方式
+## 2.2 通过@Component方式
 Spring允许通过扫描装配Bean到IoC容器中，对于扫描装配而言使用的注解是@Component和@ComponentScan。@Component标明哪个类被扫描进入Spring IoC容器，而@ComponentScan则是标明采用何种策略去扫描装配Bean。
 @Component(String value)设置Bean的名称，默认为类名首字母小写。
 @ComponentScan默认扫描当前注解类所在的包和子包,可以通过basePackages,basePackageClasses等修改扫描位置。
@@ -117,3 +117,4 @@ public interface BeanNameAware extends Aware {
     void setBeanName(String name);
 }
 ```
+可以通过图中的注解执行自定义的方法。
