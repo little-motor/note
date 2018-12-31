@@ -59,9 +59,61 @@ public interface BeanFactory {
 Spring允许通过扫描装配Bean到IoC容器中，对于扫描装配而言使用的注解是@Component和@ComponentScan。@Component标明哪个类被扫描进入Spring IoC容器，而@ComponentScan则是标明采用何种策略去扫描装配Bean。
 @Component(String value)设置Bean的名称，默认为类名首字母小写。
 @ComponentScan默认扫描当前注解类所在的包和子包,可以通过basePackages,basePackageClasses等修改扫描位置。
-## 3. 依赖注入(Dependency Injection)
+# 3. 依赖注入(Dependency Injection)
 @Autowird是依赖注入中使用最多的注解之一，关于依赖注入这种设计模式的详细解释请至[传送门](https://baike.baidu.com/item/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/1158025?fr=aladdin)，他注入的机制最基本的一条是根据类型查找Bean，即BeanFactory接口中的
 ```
 <T> T getBean(Class<T> requiredType) throws BeansException;
 ```
-需要注意的是@Autowired是一个默认必须找到对应Bean的注解，如果不能确定其标注属性一定存在，可以将required=false
+需要注意的是@Autowired是一个默认必须找到对应Bean的注解，如果不能确定其标注属性一定存在，可以将required=false,他首先会根据类型查找Bean，如果对应的Bean不是唯一的，那么他会根据属性名称和Bean的名称进行匹配。
+## 3.1 消除歧义性——@Primary和@Qualifier
+@Primary告诉Spring IoC容器发现多个同样类型的Bean时，优先使用此注解的Bean
+```
+...
+@Component
+@Primary
+public class demo{
+	...
+}
+```
+@Qualifier通过配置项value字符串定义需要的Bean name，与@Autowired组合使用，底层是通过BeanFactory借口的geatBean方法
+```
+<T> T getBean(String name,Class<T> requiredType) throws BeansException;
+```
+使用方法为
+```
+@Autowired
+@Qualifier("name")
+public ClassName instance = null;
+```
+# 4. 生命周期
+Spring IoC管理Bean的生命周期大致分为4个部分：
+Bean定义、Bean初始化、Bean的生存期、Bean的销毁。
+## 4.1 Bean定义过程
+Spring会通过配置比如@ComponentScan扫面带有@Component注解的类定位资源，解析之后会将定义信息保存起来，然后将Bean定义发布到IoC容器中，注意这个过程中只有Bean的定义而没有实例生成。
+![Spring初始化Bean](https://raw.githubusercontent.com/little-motor/uml/master/Spring/SpringInitBean.png)
+<center>Spring 初始化Bean</center>
+可以通过设置@ComponentScan中的lazyInit来实现延迟加载，默认情况下为false在注入前已经实例化。
+## 4.2 Spring Bean生命周期
+![Spring Bean生命周期](https://raw.githubusercontent.com/little-motor/uml/master/Spring/Spring%20Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.png)
+
+这里有几个需要注意的地方：
+接口BeanNameAware,BeanFactoryAware,ApplicationContextAware,InitializingBean,DisposableBean分别对应单个Bean的生命周期中的各个阶段：定义，初始化和销毁。而方法postProcessBeforeInitialization和postProcessAfterInitialization是接口BeanPostProcessor中的两个方法，针对的是全部的Bean生效
+```
+public interface BeanPostProcessor {
+    @Nullable
+    default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+	return bean;
+    }
+
+    @Nullable
+    default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+	return bean;
+    }
+}
+```
+名为...Aware结尾的接口可以感知到其前面的含义的变化并注入到Bean实例中，例如BeanNameAware便可以感知到Bean的name并注入
+```
+public interface BeanNameAware extends Aware {
+    void setBeanName(String name);
+}
+```
