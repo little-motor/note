@@ -488,5 +488,41 @@ public void around(ProceedingJoinPoint jp) throws Throwable {
     System.out.println("around after ...");
 }
 ```
-### 3.3.2 引入
-前面的方法print只能打出用户的姓名，我们还想要打印出用户的note信息，但是假设这个方法不能由UserServiceImpl提供，而需要接口UserNote的printNote方法提供
+### 3.3.2 多个切面
+当有多个切面拦截同一个方法时，可以通过@order(int n)确定切面顺序，或事通过order接口实现，数值越小优先级越高，我们复制上面的MyAspect并命名为MyAspect2和MyAspect3，然后用@order注解分别注解。
+```
+@Component
+@Aspect
+@Order(1)
+public class MyAspect3 {
+    ...
+    }
+
+@Component
+@Aspect
+@Order(2)
+public class MyAspect2 {
+    ...
+    }
+
+@Component
+@Aspect
+@Order(3)
+public class MyAspect1 {
+    ...
+    }
+```
+输出结果如下：
+```
+before3
+before2
+before1
+hi: littlemotor
+after1
+afterReturning1
+after2
+afterReturning2
+after3
+afterReturning3
+```
+
