@@ -276,7 +276,217 @@ around before ...
 after ...
 afterThrowing ...
 ```
+# 3. Spring AOP详解
+前面并没有讲AOP的概念，只是通过一个动态代理的实例了解了AOP织入的本质，Spring AOP也是一种约定流程的编程，可以将代码织入事先约定的流程中。AOP可以减少大量重复工作，是对面向对象编程(OOP)的补充，比如在数据库的事务处理中，其流程图如下所示
+
+![事务流程默认实现](https://github.com/little-motor/uml/blob/master/AOP/%E4%BA%8B%E7%89%A9%E6%B5%81%E7%A8%8B%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AE%9E%E7%8E%B0.png?raw=true)
+<center>事务流程默认实现</center>
+在Spring中通过@Transactional注解即可实现，其大致原理就是Spring将sql执行语句织入到类似于上图的流程中。
+
+## 3.1 AOP术语和流程
+Spring AOP是一种基于方法的AOP，他只能用于方法上。
+- 连接点(join point)：对应的是具体被拦截的方法，AOP通过动态代理技术将它织入到对应的流程中
+- 切点(point cut)：有时候切面不单单应用于单个方法，也可能是多个类的不同方法，这时，可以通过正则表达式和指示器的规则去定义，从而适配连接点。切点就是提供提供这个功能的。
+- 通知(advice)：约定流程中的执行方式，分为前置通知(before advice),后置通知(after advice),环绕通知(around advice),事后返回通知(afterReturning advice)和异常通知(afterThrowing advice),他会根据预定织入流程。
+- 目标对象(target)：即被代理的对象，例如上面的HelloServiceImp实例就是目标对象，他被代理了。
+- 引入(introduction)：引入新的类和方法，增强现有的Bean功能。
+- 织入(weaving)：通过动态代理技术，为原有服务对象生成代理对象，然后将与切点定义匹配的连接点拦截，并按照约定将各类通知织入约定流程的过程。
+- 切面(aspect)：是一个可以定义切点、各类通知和引入的内容，Spring AOP将通过他的信息来增强Bean的功能或者将对应的方法织入流程。
+
+备注一些，Spring AOP中实现动态代理的方式有JDK动态代理和CGLIB动态代理，不同版本中默认的实现方式不同，在Spring Boot 2.1.1中默认使用CGLIB实现动态代理，具体设置可以查看类AopAutoConfiguration的设置，通过application.yml可以修改
+```
+#默认true时使用cglib,false使用jdk动态代理，AopAutoConfiguration中默认使用true
+spring:
+  aop:
+    proxy-target-class: false  #修改为jdk动态代理
+```
+## 3.2 AOP开发流程详解
+### 3.2.1 确定连接点
+用户服务接口
+```
+package cn.littlemotor.web.aspect.service.interf;
+
+import cn.littlemotor.web.model.User;
+
+/**
+ * 用于切面中的接口，在imp包中被实现，然后可以被动态代理包装为面的一部分
+ * @author littlemotor 
+ * @date 19.1.5
+ */
+
+public interface UserService {
+    public void printUser(User user);
+}
+```
+用户服务接口实现类
+```
+package cn.littlemotor.web.aspect.service.imp;
+
+import cn.littlemotor.web.aspect.service.interf.UserService;
+import cn.littlemotor.web.model.User;
+import org.springframework.stereotype.Component;
+
+/**
+ * 用户接口实现类
+ * @author littlemotor
+ * @date 19.1.6
+ */
+@Component
+public class UserServiceImpl implements UserService {
+    @Override
+    public void printUser(User user) {
+        System.out.println("hi: " + user.getName());
+    }
+}
+```
+### 3.2.2 开发切面
+以printUser方法作为连接点创建一个切面类
+```
+package cn.littlemotor.web.aspect;
+
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+/**
+ * 面向切面编程终端切面部分
+ * @author littlemotor
+ * @date 19.1.5
+ */
+@Component
+@Aspect
+public class MyAspect {
+
+    @Pointcut("execution(* cn.littlemotor.web.aspect.service.imp.UserServiceImpl.printUser(..))")
+    public void pointCut(){
+    }
+
+    @Before("pointCut()")
+    public void before(){
+        System.out.println("before");
+    }
+
+    @After("pointCut()")  //无论有没有抛出错误都会执行
+    public void after(){
+        System.out.println("after");
+    }
+
+    @AfterReturning("pointCut()")
+    public void afterReturning(){
+        System.out.println("afterReturning");
+    }
+
+    @AfterThrowing("pointCut()")
+    public void afterThrowing(){
+        System.out.println("afterThrowing");
+    }
+}
+```
+Spring通过@Aspect注解来声明该类为一个切面，并且可以在内部定义各类通知和切点，@Pointcut通过正则表达式的方式定义什么时候启用AOP，别的通知可以直接引用被@Pointcut注解的方法名。
+简单的分析一下切点中的正则表达式：
+execution(* cn.littlemotor.web.aspect.service.imp.UserServiceImpl.printUser(..))
+- excution表示在执行的时候，拦截里面的正则匹配的方法
+- * 表示任意返回类型的方法
+- cn.littlemotor.web.aspect.service.imp.UserServiceImpl表示目标对象的全限定名
+- printUser指定目标对象的方法
+- (..)表示任意参数进行匹配
+  
+AspectJ关于Spring AOP切点的指示器如下
+
+项目类型 | 描述
+---------|----------
+ arg() | 限定连接点方法参数
+@args() | 通过连接点方法参数上的注解进行限定
+ execution() | 用于匹配是连接点的执行方法
+ this()|限制连接点匹配AOP代理Bean引用为指定类型
+ target|目标对象(即被代理对象)
+ @target()|限制目标对象配置了指定的注解
+ within|限制连接点匹配指定的类型
+ @within()|限定连接点带有匹配注解类型
+ @annotation()|限定带有指定注解的连接点
+
+### 3.2.3 测试AOP
+在一个Web开发环境中进行测试，controller如下
+```
+package cn.littlemotor.web.controller;
+
+import cn.littlemotor.web.aspect.service.imp.UserServiceOnlyClass;
+import cn.littlemotor.web.aspect.service.interf.UserService;
+import cn.littlemotor.web.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ * 测试aop切面编程
+ * @author littlemotor
+ * @date 19.1.5
+ */
+@Controller
+@RequestMapping("/user")
+public class UserController {
 
 
+    @Autowired
+    private UserService userService = null;
+
+    @Autowired
+    private UserServiceOnlyClass userServiceOnlyClass = null;
+
+    @RequestMapping("/print")
+    @ResponseBody
+    public User printUser(int id, String name, String note) {
+
+        User user = new User();
+        user.setId(id);
+        user.setName(name);
+        user.setNote(note);
+        userService.printUser(user);
+        userServiceOnlyClass.printUser(user);
+        return user;
+    }
+}
+```
+
+Spring Boot配置启动文件
+```
+package cn.littlemotor.web;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+/**
+ *
+ */
+@SpringBootApplication(scanBasePackages = {"cn.littlemotor.web.aspect","cn.littlemotor.web.controller"})
+public class WebApplication {
 
 
+	public static void main(String[] args) {
+		SpringApplication.run(WebApplication.class, args);
+	}
+
+}
+```
+启动程序后在浏览器中输入localhost:8080/user/print?id=1&name=littlemotor&note=test，就可以在控制台中看到输出结果，这就是一个简单的AOP织入过程。
+```
+before
+hi: littlemotor
+after
+afterReturning
+```
+
+## 3.3 AOP补充
+### 3.3.1 环绕通知
+其使用场景是需要大幅度修改原有目标对象的服务逻辑时，否则建议使用其他通知，同时他也提供了回调原有目标对象方法的能力。
+```
+@Around("pointCut()")
+public void around(ProceedingJoinPoint jp) throws Throwable {
+    System.out.println("around before ...");
+    //回调目标对象的原有方法
+    jp.proceed();
+    System.out.println("around after ...");
+}
+```
+### 3.3.2 引入
+前面的方法print只能打出用户的姓名，我们还想要打印出用户的note信息，但是假设这个方法不能由UserServiceImpl提供，而需要接口UserNote的printNote方法提供
