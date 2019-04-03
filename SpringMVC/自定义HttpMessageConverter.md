@@ -57,7 +57,13 @@ Resolves method arguments annotated with @RequestBody and handles return values 
 
 An @RequestBody method argument is also validated if it is annotated with @javax.validation.Valid. In case of validation failure, MethodArgumentNotValidException is raised and results in an HTTP 400 response status code if DefaultHandlerExceptionResolver is configured.
 ```
-大概意思就是这个类负责处理注解了@RequestBody**方法参数**和方法上注解了@ResponseBody的**返回值**。通过HttpMessageConverter的请求和返回对象，同时@RequestBody注解的参数同时能由@Valid注解进行验证。
+大概意思就是这个类负责处理注解了@RequestBody**方法参数**和方法上注解了@ResponseBody的**返回值**。通过HttpMessageConverter的请求和返回对象，同时@RequestBody注解的参数同时能由@Valid注解进行验证。下面我们简单了解一下他是如何整个过程串起来的。
+
+![RequestResponseBodyMethodProcessor](https://raw.githubusercontent.com/little-motor/uml/master/Spring/springmvc/RequestResponseBodyMethodProcessor.png)
+<center>类的继承关系</center>
+## 3.1 AbstractMessageConverterMethodArgumentResolver
+这个抽象类实现了HandlerMethodArgumentResolver接口，负责对方法参数的解析
+
 
 
 
