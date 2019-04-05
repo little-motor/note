@@ -47,3 +47,95 @@ AuthenticationManagerBuilder可以通过内存签名，数据库签名和自定�
  authorities(GrantedAuthority...) | 赋予一个或多个权限
  password | 定义密码
  roles(String...) | 赋予角色，会自动加入前缀"ROLE_"
+### 2.1.1 使用数据库定义用户认证服务
+```
+public class WebSecurityConfigurerAdapterImpl extends WebSecurityConfigurerAdapter{
+
+    @Autowired
+    private DataSource dataSource = null;
+
+    //sql语句
+
+    @Override
+    protected void configurer(AuthenticationManagerBuilder auth) throws Exception{
+        //密码编码器
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        auth.jdbcAuthentication()
+            //密码编码器
+            .passwordEncoder(passwordEncoder)
+            //数据源
+            .dataSource(dataSource)
+            //查询用户，自动判断密码是否一致
+            .usersByUsernameQuery(pwdQuery)
+            //赋予权限
+            .authoritiesByUsernameQuery(roleQuery);
+    }
+}
+```
+### 2.1.2 使用自定义用户认证服务
+Spring security提供了一个UserDetailsService接口，通过它可以获取用户信息，这个接口只有一个loadUserByUsername方法需要实现。
+```
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService{
+    //注入接口服务
+    @Autowired
+    private UserRoleService userRoleService = null;
+
+    @Override
+    @transactional
+    public UserDetails loadByUsername(String userName){
+        //获取数据库用户信息
+        //转换为UserDetails对象返回
+        ...
+    }
+}
+```
+之后需要注册这个UserDetailsServiceImpl
+```
+public class WebSecurityConfigurerAdapterImpl extends WebSecurityConfigurerAdapter{
+
+    @Autowired
+    private UserDetailsService userDetailsService = null;
+
+    protected void configurer(AuthenticationManagerBuilder auth) throws Exception{
+        //密码编码器
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        //设置用户密码服务和密码编辑器
+        auth.userDetailsService(userDetailsService)
+            .passwordEncoder(passwordEncoder);
+    }
+}
+```
+## 2.2 限制请求
+WebSecurityConfigurerAdapter的configurer(HttpSecurity http)方法能够实现对于不同角色（用户）赋予不同权限的功能、限定请求范围以及认证方式等。HttpSecurity允许使用Ant风格或者正则式的路径限定安全请求
+```
+/**
+* 使用ant风格配置限定模板
+*/
+@Override
+protected void configure(HttpSecurity http) throws Exception{
+    http.
+        //限定"/user/welcome"和"/user/details"请求赋予角色ROLE_USER或者ROLE_ADMIN
+        .antMathers("/user/welcome","/user/details").hasAnyRole("USER","ADMIN")
+        //限定"/admin/"下所有请求权限赋予角色ROLE_ADMIN
+        .antMathers("/admin/**").hasAuthority("ROLE_ADMIN")
+        //其他路径允许签名后访问
+        .anyRequest().permitAll()
+
+        //允许匿名访问
+        .and.anonymous()
+
+        //采用默认登陆页面和认证方式
+        .and().formLogin()
+        .and().httpBasic();
+}
+```
+这里需要注意的是把具体的配置放在前面，把不具体的放在后面，spring security会才有先配置的优先级高的原则。
+hasAnyRole方法默认加入前缀"ROLE"，而hasAuthority方法则不会，他们都表示对应都路径只有用户分配了对应的角色才能访问。
+关于权限常用的方法如下：
+
+方法 | 含义
+---------|----------
+access(String) | 参数为Spring表达式，如果返回true则允许访问
+anonymous() | 允许匿名访问
+ A3 | B3 | C3
