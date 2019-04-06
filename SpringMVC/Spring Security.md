@@ -138,4 +138,90 @@ hasAnyRole方法默认加入前缀"ROLE"，而hasAuthority方法则不会，他�
 ---------|----------
 access(String) | 参数为Spring表达式，如果返回true则允许访问
 anonymous() | 允许匿名访问
- A3 | B3 | C3
+authorizeRequests() | 限定通过签名的请求
+anyRequest() | 限定任意的请求
+hasAnyRole(String...) | 将访问权限赋予多个角色（角色会自动加入前缀"ROLE_"）
+hasRole(String) | 将访问权限赋予一个角色（角色会自动加入前缀"ROLE_"）
+permitAll() | 无条件允许访问
+and() | 连接词，并取消之前限定前提规则
+not() | 对其他方法的访问采取求反
+fullyAuthenticated() | 如果是完整验证(并非Remember me)，则允许访问
+denyAll() | 无条件不允许任何访问
+hasIpAddress(String) | 如果是给定的IP地址则允许访问
+rememberme() | 用户通过Remember me功能验证就允许访问
+hasAuthority(String) | 如果是给定用户就允许访问(不自动加入前缀"ROLE_")
+hasAnyAuthority(String...) | 如果是给定角色中的任意一个就允许访问（不自动加入前缀"ROLE_")
+## 2.3 自定义登陆页面
+可以通过覆盖WebSecurityConfigurerAdapter的configure(HttpSecurity http)方法让登陆页面指向对应的请求路径和启用“记住我”功能。
+```
+@Override
+protected void configure(HttpSecurity http) throws Exception{
+    http.
+        //限定"/admin/"下所有请求权限赋予角色ROLE_ADMIN
+        .antMathers("/admin/**").hasAuthority("ROLE_ADMIN")
+        //启用remember me功能
+        .and().rememberMe().tokenValiditySeconds(86400).key("remember-me-key")
+        //通过签名后可以访问任何请求
+        .and().authorizeRequests().antMatcher("/**").permitAll()
+        //设置登陆页面和默认的跳转路径
+        .and().formLogin().loginPage("/login/page")
+            .defaultSuccessUrl("/welcome");
+}
+```
+# 3. 防止夸站点请求伪造(Cross-Site Request Forgery,CSRF)
+csrf的工作原理，首先浏览器请求安全的网站，在登陆后浏览器就记录一些信息以cookie的形式保存，然后在不关闭浏览器的情况下，用户可能访问一个危险网站，危险网站通过获取cookie信息来伪造用户的请求，进而请求安全网站。
+CsrfFilter过滤器用来防止CSRF攻击，可以通过下面方式关闭
+```
+//但是不建议这么做
+http.csrf().disable().authorizeRequests()...
+```
+需要注意的是，match的method为除了"GET", "HEAD", "TRACE", "OPTIONS"以外的所有方法。通过源代码可知其验证方式大概是首次访问页面时首先生成并在服务器保存csrfToken，第二次如果是post，那么他会验证这个一起传过来的csrfToken与原来的是否一致。
+```
+//CsrfFilter中的核心方法
+
+@Override
+protected void doFilterInternal(HttpServletRequest request,
+        HttpServletResponse response, FilterChain filterChain)
+                throws ServletException, IOException {
+    request.setAttribute(HttpServletResponse.class.getName(), response);
+    //根据request从session载入csrfToken
+    CsrfToken csrfToken = this.tokenRepository.loadToken(request);
+    //判断csrfToken是否为空
+    final boolean missingToken = csrfToken == null;
+    //如果csrfToken为空那么生成新的csrfToken并保存
+    if (missingToken) {
+        csrfToken = this.tokenRepository.generateToken(request);
+        this.tokenRepository.saveToken(csrfToken, request, response);
+    }
+    request.setAttribute(CsrfToken.class.getName(), csrfToken);
+    request.setAttribute(csrfToken.getParameterName(), csrfToken);
+    //判断http方法是否为"GET", "HEAD", "TRACE", "OPTIONS"，如果是就不检查
+    if (!this.requireCsrfProtectionMatcher.matches(request)) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+    //获取request里面携带的csrfToken，首先检查header，之后检查body
+    String actualToken = request.getHeader(csrfToken.getHeaderName());
+    if (actualToken == null) {
+        actualToken = request.getParameter(csrfToken.getParameterName());
+    }
+    //根据检验结果返回
+    if (!csrfToken.getToken().equals(actualToken)) {
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Invalid CSRF token found for "
+                    + UrlUtils.buildFullRequestUrl(request));
+        }
+        if (missingToken) {
+            this.accessDeniedHandler.handle(request, response,
+                    new MissingCsrfTokenException(actualToken));
+        }
+        else {
+            this.accessDeniedHandler.handle(request, response,
+                    new InvalidCsrfTokenException(csrfToken, actualToken));
+        }
+        return;
+    }
+
+    filterChain.doFilter(request, response);
+}
+```
