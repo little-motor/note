@@ -1,7 +1,7 @@
 [toc]
 
 # 1. 引言
-经常用Java相关的事件类比如Date,Timestamp，做一总结以便记录和查看
+经常用Java相关的时间类比如Date,SimpleDateFormat,Calendar等，同时java.sql包中也有相应的包装类，做一总结以便记录和查看。
 # 2. Date类
 ## 2.1 初始化类
 java.util 包提供了 Date 类来封装当前的日期和时间。 Date 类提供两个构造函数来实例化 Date 对象。
@@ -668,5 +668,44 @@ Calendar类实现了公历日历，GregorianCalendar是Calendar类的一个具�
 	</tbody>
 </table>
 
+# 5. 数据库中的时间类
+java.util.Date日期格式为：年月日时分秒
+下面的三个类都继承自java.util.Date类，他们对java.util.Date类进行了包装
+1. java.sql.Date日期格式为：年月日[只存储日期数据不存储秒、分、小时数据，是专门针对sql设计]
+2. java.sql.Time日期格式为：时分秒
+3. java.sql.Timestamp日期格式为：年月日时分秒纳秒（毫微秒）
+## 5.1 java.sql.Date类
+java.sql.Date类屏蔽了java.util.Date类的时间有关的方法（形如：hh:mm:ss），因此，不可以通过这个类访问时、分、秒有关的信息，比如，如果你通过sqlDate.getHour()方法去访问小时信息，此方法会抛出一个IllegalArgumentException异常。
 
-参考：https://www.runoob.com/java/java-date-time.html
+这是因为java.sql.Date在继承java.util.Date类的时候对父类进行了重写，禁用了时、分、秒访问的方法。之所以这么处理，是为了和数据库的Date数据类型相匹配，数据库的Date数据类只是保存日期有关的字段。但是java.sql.Date类有getTime方法返回毫秒数，所以它可以与java.util.Date进行互换：
+```
+//java.sql.Date转为java.util.Date
+java.sql.Date sqlDate=new java.sql.Date();
+java.util.Date utilDate=new java.util.Date (sqlDate.getTime());
+
+//java.util.Date转为java.sql.Date
+java.util.Date utilDate=new Date();
+java.sql.Date sqlDate=new java.sql.Date(utilDate.getTime());
+```
+## 5.2 java.sql.Time类
+java.sql.Time类屏蔽了java.util.Date的日期有关的字段（形如：yyyy-MM-dd），因此，不能通过这个类访问日期有关的信息，比如：如果你通过sqlTime.getYear()方法去获取年有关的信息，此方法会抛出一个IllegalArgumentException异常。
+
+这是因为java.sql.Time在继承java.util.Date类的时候对父类进行了重写，禁用了日期访问的方法。之所以这么处理，是为了和数据库的Time数据类型相匹配，数据库的Time数据类行只是保存时间有关的字段。
+
+java.sql.date 是只包含了日期。而 java.sql.time 只包含了一个时间。java.sql.time,java.sql.date 二者如何组合成一个java.util.date呢？取毫秒相加，作为java.util.date的构造方法参数就可以了。
+```
+//将sql的date和time相加得到java.util.Date实例
+java.sql.Date d = new java.sql.Date(new java.util.Date().getTime());
+java.sql.Time t = new java.sql.Time(new java.util.Date().getTime());
+java.util.Date day = new java.util.Date(d.getTime() + t.getTime());
+```
+## 5.3 java.sql.Timestamp
+java.sql.Timestamp字段则对java.util.Date这个类进行了扩充，它在java.util.Date类的基础上增加了纳秒，因此，你可以通过getNanos方法去获取时间的纳秒值（1秒等于10的9次方纳秒），同样的，这也是为了和数据库中的Timestamp数据类型进行匹配。
+但是需要注意的是，由于加入了纳秒字段，所以Timestampt的equeal方法与Date类Timestampt的hashcode方法不包括纳秒，由于Timestamp和java.util.Date之间的差异,建议代码不要将Timestamp作为java.util.Date的实例来对待,Timestampt和Date实际上表示实现继承，而不是类型继承。
+
+
+参考：
+
+https://www.runoob.com/java/java-date-time.html
+
+http://swiftlet.net/archives/754
