@@ -17,8 +17,11 @@ ThreadLocal是一个本地线程副本变量工具类。主要用于将私有线
 - 但是，Thread内部的Map是由ThreadLocal维护的，由ThreadLocal负责向map获取和设置线程的变量值。
   
 所以对于不同的线程，每次获取副本值时，别的线程并不能获取到当前线程的副本值，形成了副本的隔离，互不干扰。当使用ThreadLocal维护变量时，ThreadLocal为每个使用该变量的线程提供独立的变量副本，所以每一个线程都可以独立地改变自己的副本，而不会影响其它线程所对应的副本。
-# 3. 原理
-Thread中的ThreadLocal.ThreadLocalMap属性
+ThreadLocal有个ThreadLocalMap内部类，存储的数据就放在这儿。
+ThreadLocal、ThreadLocal、Thread之间的关系可以概括为:ThreadLocalMap是ThreadLocal内部类，由ThreadLocal创建，Thread有ThreadLocal.ThreadLocalMap类型的threadLocals属性。
+
+# 3. ThreadLocal类
+在讲ThreadLocal之前先说明一下Thread中的ThreadLocal.ThreadLocalMap属性
 ```
 public
 class Thread implements Runnable {
@@ -113,25 +116,49 @@ void createMap(Thread t, T firstValue) {
 1. 获取当前线程的成员变量threadLocals赋值给map
 2. 若map非空，则重新将ThreadLocal和新的value副本放入到map中。
 3. 若map空，则对线程的成员变量ThreadLocalMap进行初始化创建，并将ThreadLocal和value副本放入map中。
+## 3.3 remove方法
+```
+/**
+ * Removes the current thread's value for this thread-local
+ * variable.  If this thread-local variable is subsequently
+ * {@linkplain #get read} by the current thread, its value will be
+ * reinitialized by invoking its {@link #initialValue} method,
+ * unless its value is {@linkplain #set set} by the current thread
+ * in the interim.  This may result in multiple invocations of the
+ * <tt>initialValue</tt> method in the current thread.
+ * 删除线程的变量副本，如果后面有读取请求的话可能会多次调用initialValue方法
+ * @since 1.5
+ */
+public void remove() {
+ ThreadLocalMap m = getMap(Thread.currentThread());
+ if (m != null)
+     m.remove(this);
+}
+
+ThreadLocalMap getMap(Thread t) {
+    return t.threadLocals;
+}
+```
+# 4. ThreadLocal.ThreadLocalMap类
+ThreadLocalMap是ThreadLocal的内部类，没有实现Map接口，用独立的方式实现了Map的功能，其内部的Entry也独立实现，其结构如下：
+![ThreadLocal.ThreadLocalMap结构](https://raw.githubusercontent.com/little-motor/uml/master/Java/ThreadLocal.ThreadLocalMap.png)
+
+在ThreadLocalMap中，也是用Entry来保存K-V结构数据的。但是Entry中key只能是ThreadLocal对象，这点被Entry的构造方法已经限定死了。
+```
+static class Entry extends WeakReference<ThreadLocal> {
+    /** The value associated with this ThreadLocal. */
+    Object value;
+
+    Entry(ThreadLocal k, Object v) {
+        super(k);
+        value = v;
+    }
+}
+```
+Entry继承自WeakReference（弱引用，生命周期只能存活到下次GC前），但只有Key是弱引用类型的，Value并非弱引用。
 
 
-
-
-
-
-
-
-
-
-
-
-ThreadLocal，连接ThreadLocalMap和Thread。来处理Thread的ThreadLocal.TheadLocalMap类型的threadLocals属性，包括init初始化属性赋值、get对应的变量，set设置变量等。通过当前线程，获取线程上的ThreadLocalMap属性，对数据进行get、set等操作。
-
-　　ThreadLocalMap，用来存储数据，采用类似hashmap机制，存储了以threadLocal为key，需要隔离的数据为value的Entry键值对数组结构。
-
-　　ThreadLocal，有个ThreadLocalMap内部类，存储的数据就放在这儿。
-ThreadLocal、ThreadLocal、Thread之间的关系可以概括为:ThreadLocalMap是ThreadLocal内部类，由ThreadLocal创建，Thread有ThreadLocal.ThreadLocalMap类型的threadLocals属性。
-
+　　
 
 # 4. 简单用法
 ```
