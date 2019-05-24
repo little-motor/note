@@ -302,6 +302,10 @@ public class MyThreadLocal {
     }
 }
 ```
+# 6. 总结
+- 每个ThreadLocal只能保存一个变量副本，如果想要上线一个线程能够保存多个副本以上，就需要创建多个ThreadLocal。
+- ThreadLocal内部的ThreadLocalMap键为弱引用，会有内存泄漏的风险。
+- 适用于无状态，副本变量独立后不影响业务逻辑的高并发场景。如果如果业务逻辑强依赖于副本变量，则不适合用ThreadLocal解决，需要另寻解决方案。
 
 
 
