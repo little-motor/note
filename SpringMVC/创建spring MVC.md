@@ -34,7 +34,105 @@ HttpServlet的简单扩展，它将配置参数(web.xml中servlet标记中的ini
 			}
 		}
 
-		// Let subclasses do whatever initialization they like.
+		// 由子类实现初始化
 		initServletBean();
+	}
+```
+可以看到子类通过重写initServletBean()方法来进一步初始化。
+# 3. FrameworkServlet
+```
+/**
+	 * Overridden method of {@link HttpServletBean}, invoked after any bean properties
+	 * have been set. Creates this servlet's WebApplicationContext.
+	 */
+	@Override
+	protected final void initServletBean() throws ServletException {
+		getServletContext().log("Initializing Spring FrameworkServlet '" + getServletName() + "'");
+		if (this.logger.isInfoEnabled()) {
+			this.logger.info("FrameworkServlet '" + getServletName() + "': initialization started");
+		}
+		long startTime = System.currentTimeMillis();
+
+		try {
+			this.webApplicationContext = initWebApplicationContext();
+			initFrameworkServlet();
+		}
+		catch (ServletException ex) {
+			...
+```
+在FrameworkServlet中重写了initServletBean()方法，其主要做了两件事
+```
+//初始化webApplicationContext
+this.webApplicationContext = initWebApplicationContext();
+//初始化FrameworkServlet，模板方法
+initFrameworkServlet();
+```
+让我们来了解一下initFramewordServlet()方法
+```
+	/**
+	 * Initialize and publish the WebApplicationContext for this servlet.
+	 * <p>Delegates to {@link #createWebApplicationContext} for actual creation
+	 * of the context. Can be overridden in subclasses.
+	 */
+	protected WebApplicationContext initWebApplicationContext() {
+		//获取rootContext
+		WebApplicationContext rootContext =
+				WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+		WebApplicationContext wac = null;
+		//如果已经通过构造方法设置了WebApplicationContext
+		if (this.webApplicationContext != null) {
+			// A context instance was injected at construction time -> use it
+			wac = this.webApplicationContext;
+			if (wac instanceof ConfigurableWebApplicationContext) {
+				ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) wac;
+				if (!cwac.isActive()) {
+					// The context has not yet been refreshed -> provide services such as
+					// setting the parent context, setting the application context id, etc
+					if (cwac.getParent() == null) {
+						// The context instance was injected without an explicit parent -> set
+						// the root application context (if any; may be null) as the parent
+						cwac.setParent(rootContext);
+					}
+					//configureAndRefreshWebApplicationContext方法用于封装ApplicationContext数据并且初始化所有相关Bean对象。
+					//它会从web.xml中读取名为contextConfigLocation的配置，这就是spring xml数据源设置，然后放到ApplicationContext中，
+					//最后调用传说中的refresh方法执行所有Java对象的创建
+					configureAndRefreshWebApplicationContext(cwac);
+				}
+			}
+		}
+		if (wac == null) {
+			//从servlet context中获取webApplicationContext
+			// No context instance was injected at construction time -> see if one
+			// has been registered in the servlet context. If one exists, it is assumed
+			// that the parent context (if any) has already been set and that the
+			// user has performed any initialization such as setting the context id
+			wac = findWebApplicationContext();
+		}
+		if (wac == null) {
+			//如果从servlet context中找不到就创建一个新的
+			// No context instance is defined for this servlet -> create a local one
+			wac = createWebApplicationContext(rootContext);
+		}
+
+		if (!this.refreshEventReceived) {
+			//如果没有refresh，在这里刷新
+			// Either the context is not a ConfigurableApplicationContext with refresh
+			// support or the context injected at construction time had already been
+			// refreshed -> trigger initial onRefresh manually here.
+			onRefresh(wac);
+		}
+
+		if (this.publishContext) {
+			//将ApplicationContext保存到ServletContext中
+			// Publish the context as a servlet context attribute.
+			String attrName = getServletContextAttributeName();
+			getServletContext().setAttribute(attrName, wac);
+			if (this.logger.isDebugEnabled()) {
+				this.logger.debug("Published WebApplicationContext of servlet '" + getServletName() +
+						"' as ServletContext attribute with name [" + attrName + "]");
+			}
+		}
+
+		return wac;
 	}
 ```
