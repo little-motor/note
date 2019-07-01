@@ -193,8 +193,8 @@ protected void doFilterInternal(HttpServletRequest request,
         csrfToken = this.tokenRepository.generateToken(request);
         this.tokenRepository.saveToken(csrfToken, request, response);
     }
-    //注意csrfToken保存在request里面而不是session里面，获取的方式有两种，
-    //key分别为"org.springframework.security.web.csrf.CsrfToken"和"_csrf"
+    //获取token的方式有多种可以通过request的getAttribute也可以通过session
+    //他们的key分别为"org.springframework.security.web.csrf.CsrfToken"、"_csrf"和"org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository.CSRF_TOKEN"
     request.setAttribute(CsrfToken.class.getName(), csrfToken);
     request.setAttribute(csrfToken.getParameterName(), csrfToken);
     //判断http方法是否为"GET", "HEAD", "TRACE", "OPTIONS"，如果是就不检查
