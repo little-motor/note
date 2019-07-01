@@ -54,7 +54,9 @@ HttpServlet的简单扩展，它将配置参数(web.xml中servlet标记中的ini
 		long startTime = System.currentTimeMillis();
 
 		try {
+			//初始化WebApplicationContext
 			this.webApplicationContext = initWebApplicationContext();
+			//空方法，子类可以重写
 			initFrameworkServlet();
 		}
 		catch (ServletException ex) {
@@ -67,7 +69,7 @@ this.webApplicationContext = initWebApplicationContext();
 //初始化FrameworkServlet，模板方法
 initFrameworkServlet();
 ```
-让我们来了解一下initFramewordServlet()方法
+让我们来了解一下initWebApplicationContext方法
 ```
 	/**
 	 * Initialize and publish the WebApplicationContext for this servlet.
@@ -136,3 +138,9 @@ initFrameworkServlet();
 		return wac;
 	}
 ```
+initWebApplicationContext方法做了三件事：
+1. 获取spring的根容器rootContext
+2. 设置webApplicationContext并根据情况调用onRefresh方法
+3. 将webApplicationContext设置到ServletContext中
+
+整个FrameworkServlet中重要的事情就是将创建出来的WebApplicationContext设置到ServletContext中，方便获取。
