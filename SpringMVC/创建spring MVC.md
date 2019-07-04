@@ -144,3 +144,28 @@ initWebApplicationContext方法做了三件事：
 3. 将webApplicationContext设置到ServletContext中
 
 整个FrameworkServlet中重要的事情就是将创建出来的WebApplicationContext设置到ServletContext中，方便获取。
+# 4. DispatcherServlet
+onRefresh方法是DispatcherServlet的入口方法，onrefresh调用了initStrategies，在initStrategies中调用了9个初始化方法
+```
+	protected void onRefresh(ApplicationContext context) {
+		initStrategies(context);
+	}
+
+	/**
+	 * Initialize the strategy objects that this servlet uses.
+	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
+	 */
+	protected void initStrategies(ApplicationContext context) {
+		initMultipartResolver(context);
+		initLocaleResolver(context);
+		initThemeResolver(context);
+		initHandlerMappings(context);
+		initHandlerAdapters(context);
+		initHandlerExceptionResolvers(context);
+		initRequestToViewNameTranslator(context);
+		initViewResolvers(context);
+		initFlashMapManager(context);
+	}
+```
+# 5. 小结
+简单分析了一个Spring MVC的创建过程，Spring MVC中Servlet一共有三个层次，分别是HttpServletBean,FrameworkServlet和DispatcherServlet。HttpServletBean直接继承自Java的HttpServlet，其作用是将Servlet中配置的参数设置到对应的属性；FrameworkServlet初始化了WebApplciationContext，DispatcherServlet初始化了自身的9个组件。
