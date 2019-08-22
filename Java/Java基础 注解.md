@@ -346,10 +346,17 @@ public class SearchAnnationsInPackage {
   }
 }
 ```
-# 4. Spring中的注解模式
+# 4. 注解的作用
+Annotation 是一个辅助类，它在 Junit、Struts、Spring 等工具框架中被广泛使用。
+## 4.1 编译检查
+Annotation 具有"让编译器进行编译检查的作用"。例如，@SuppressWarnings, @Deprecated 和 @Override 都具有编译检查作用。
+## 4.2 在反射中使用 Annotation
+在reflect库中的的Class, Method, Field 等类都实现了AnnotatedElement接口，这也意味着，我们可以在反射中解析并使用 Annotation，详细是使用方法可以参考第三节中的内容。
+## 4.3 根据 Annotation 生成帮助文档
+通过给 Annotation 注解加上 @Documented 标签，能使该 Annotation 标签出现在 javadoc 中。
+# 5. Spring中的注解模式
 请至[传送门](www)看我的另一篇设计模式相关的总结
-
-# 5. 参考
+# 6. 参考
 https://www.runoob.com/w3cnote/java-annotation.html
 https://www.jianshu.com/p/28edf5352b63
 https://www.cnblogs.com/rinack/p/7606285.html
