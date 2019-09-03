@@ -395,7 +395,7 @@ public class AnnotationMetadataInfo {
 }
 ```
 ## 2.4 Spring注解属性别名和覆盖(Attribute Aliases and Overrides)
-
+在Java反射模型中，注解之间无法继承，也不能实现接口，不过Java语言默认将所有注解实现Annotation接口，被标注的对象用API AnnotatedElement表达。
 
 
 
