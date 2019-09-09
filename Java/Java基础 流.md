@@ -427,3 +427,21 @@ BufferedOutputStream类将写入的数据存储在缓冲区中(一个名为buf�
 BufferedInputStream也有一个缓冲区的保护字节数组，名为buf，当调用read时会首先检查从缓冲区获取请求数据，只有当缓冲区没有数据时，流才从底层读取数据。这时他会从源中读取尽可能多的数据存入缓冲区，而不管是否马上需要所有这些数据。
 
 缓冲流并未添加新的方法，需要注意的是每次写入会把数据放在缓冲区，而不是直接放入底层的输出流，需要发送数据时需要刷新一下，这一点非常重要。
+## 4.3 数据流
+DataInputStream和DataOutPutStream类提供一些方法，可以用二进制格式读/写Java 的基本数据类型和字符串。
+# 5. 阅读器和书写器
+java.io.Reader和java.io.Writer是处理读/写字符的两个抽象超类，他们最重要的具体子类是InputStreamReader和OutputStreamWriter类，InputStreamReader类包含了一个底层输入流，可以从中读取原始字节，并根据指定的编码方式，将这些字节转化为Unicode字符。
+OutputStreamWriter将Unicode字符使用指定的编码方式转换为字节，再将这些字节写入底层输出流。
+## 5.1 书写器
+OutputStreamWriter是Writer最重要的具体子类，他的构造函数制定了要写入的输出流和使用的编码方式
+```
+//指定文件位置和编码方式
+OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+        new FileOutputStream("test.txt", true),
+        "UTF-8"
+    );
+    outputStreamWriter.write("hello world 中文哈喽");
+    outputStreamWriter.flush();
+
+```
+
