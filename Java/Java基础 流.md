@@ -444,4 +444,7 @@ OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
     outputStreamWriter.flush();
 
 ```
-
+## 5.2 阅读器
+Reader类是InputStream类的映射，reader(char[] text, int offset, int length)是基础方法，InputStreamReader是Reader最重要的具体子类，InputStreamReader从底层输入流（如FileInputStream或TelnetInputStream）中读取字节，然后根据指定的编码方式将这些字节转换为字符。
+## 5.3 过滤器阅读器和书写器
+BufferedReader和BufferedWriter对应于面向字节的BufferedInputStream和BufferedOutputStream，只是他们采用内部字符数组作为缓冲区。
