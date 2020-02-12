@@ -83,7 +83,7 @@ TheradPoolExecutor自身提供几种实现
 - shutdown() 已提交的任务会继续执行，不可继续提交新的任务
 - awaitTermination(long timeout, TimeUnit unit) 等待一定时间来关闭线程池
 - shutdownNow() 立即结束当前线程池内部的任务
-## 5.5 任务的处理结果、异常处理
+## 5.5 异步任务的处理与返回
 ThreadPoolExecutor的父接口提供了提交Callable实例的方法，通过返回的Future未来任务，可以查询其返回结果。由下来列出的三个submit方法可以发现，提交的任务可以为Callable实例或Runnable实例。
 简单介绍一下Callabel，更多内容可以前往[异步任务与Executor框架](https://blog.csdn.net/qq_39385118/article/details/102826341)。
 Callable接口也是对任务的抽象，任务的处理逻辑在call方法中实现，call方法的返回值代表相应任务的处理结果，其执行的任务可以抛出异常并在future.get()中感知。Future接口实例可以看作是提交给线程池执行的任务的处理结果句柄（Handle），其常用的几个方法如下
